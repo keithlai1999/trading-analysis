@@ -44,6 +44,51 @@ POPULAR_STOCKS = {
     "🎰 Genting Malaysia (4715)":     "4715.KL",
 }
 
+# Company domain mapping for logo lookup via Clearbit
+# Streamlit selectbox is text-only so logos are shown in the header instead
+STOCK_DOMAINS = {
+    "1155.KL": "maybank.com",
+    "1295.KL": "pbebank.com",
+    "1023.KL": "cimb.com",
+    "1066.KL": "rhbgroup.com",
+    "5819.KL": "hlb.com.my",
+    "1015.KL": "ambankgroup.com",
+    "6012.KL": "maxis.com.my",
+    "6947.KL": "celcomdigi.com",
+    "4863.KL": "tm.com.my",
+    "6888.KL": "axiata.com",
+    "5347.KL": "tnb.com.my",
+    "6033.KL": "petronasgas.com.my",
+    "5183.KL": "petronaschemicals.com",
+    "6742.KL": "ytlpower.com",
+    "7277.KL": "dialoggroup.com.my",
+    "1961.KL": "ioicorp.com",
+    "2445.KL": "klk.com.my",
+    "4197.KL": "simedarby.com",
+    "4707.KL": "nestle.com.my",
+    "5326.KL": "99speedmart.com.my",
+    "5296.KL": "mrdiy.com",
+    "4065.KL": "ppbgroup.com",
+    "5225.KL": "ihhhealthcare.com",
+    "5168.KL": "hartalega.com.my",
+    "7113.KL": "topglove.com",
+    "0166.KL": "inari.com.my",
+    "8869.KL": "pressmetal.com",
+    "3182.KL": "genting.com",
+    "4715.KL": "gentingmalaysia.com",
+}
+
+
+def get_stock_logo_url(ticker: str) -> str | None:
+    """
+    Return a logo image URL for the given ticker using Clearbit's free logo API.
+    Returns None if no domain mapping exists.
+    """
+    domain = STOCK_DOMAINS.get(ticker.upper())
+    if not domain:
+        return None
+    return f"https://logo.clearbit.com/{domain}"
+
 PERIOD_OPTIONS = {
     "1 Month": "1mo",
     "3 Months": "3mo",
