@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 
-from data.fetcher import fetch_stock_data, get_stock_info, POPULAR_STOCKS, PERIOD_OPTIONS, INTERVAL_OPTIONS
+from data.fetcher import fetch_stock_data, get_stock_info, normalize_ticker, POPULAR_STOCKS, PERIOD_OPTIONS, INTERVAL_OPTIONS
 from analysis.indicators import add_all_indicators
 from analysis.signals import generate_signals, get_latest_signal_summary
 
@@ -65,7 +65,9 @@ if input_method == "Popular Stocks":
     stock_label = st.sidebar.selectbox("Stock", list(POPULAR_STOCKS.keys()))
     ticker = POPULAR_STOCKS[stock_label]
 else:
-    ticker = st.sidebar.text_input("Ticker (e.g. 1155.KL)", value="1155.KL").strip().upper()
+    raw = st.sidebar.text_input("Stock code", value="1155", placeholder="e.g. 1155 or 1155.KL")
+    ticker = normalize_ticker(raw)
+    st.sidebar.caption(f"Resolved: {ticker}")
 
 period_label = st.sidebar.selectbox("Period", list(PERIOD_OPTIONS.keys()), index=2)
 period = PERIOD_OPTIONS[period_label]

@@ -42,6 +42,21 @@ def _period_to_days(period: str) -> int:
     return mapping.get(period, 180)
 
 
+def normalize_ticker(ticker: str) -> str:
+    """
+    Auto-append .KL for Bursa Malaysia stock codes entered as plain numbers.
+    Examples:
+      '1155'     → '1155.KL'
+      '5326'     → '5326.KL'
+      '1155.KL'  → '1155.KL'  (unchanged)
+      'AAPL'     → 'AAPL'     (non-Bursa, unchanged)
+    """
+    ticker = ticker.strip().upper()
+    if ticker.isdigit():
+        return ticker + ".KL"
+    return ticker
+
+
 def fetch_stock_data(ticker: str, period: str = "6mo", interval: str = "1d") -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Fetch OHLCV data from Yahoo Finance.
@@ -50,7 +65,7 @@ def fetch_stock_data(ticker: str, period: str = "6mo", interval: str = "1d") -> 
       - full_df:    longer history used for indicator calculation (ensures EMA200 has enough data)
       - display_df: trimmed to the user-selected period, used for charting
 
-    Raises ValueError if no data is returned.
+    Raises ValueError if no data is returned or rate limited.
     """
     display_days = _period_to_days(period)
     total_days   = display_days + _WARMUP_DAYS
@@ -58,16 +73,25 @@ def fetch_stock_data(ticker: str, period: str = "6mo", interval: str = "1d") -> 
     end   = datetime.today()
     start = end - timedelta(days=total_days)
 
-    stock = yf.Ticker(ticker)
-    df = stock.history(start=start.strftime("%Y-%m-%d"),
-                       end=end.strftime("%Y-%m-%d"),
-                       interval=interval)
+    try:
+        stock = yf.Ticker(ticker)
+        df = stock.history(start=start.strftime("%Y-%m-%d"),
+                           end=end.strftime("%Y-%m-%d"),
+                           interval=interval)
+    except Exception as e:
+        err = str(e)
+        if "RateLimit" in err or "rate limit" in err.lower() or "429" in err:
+            raise ValueError(
+                "Yahoo Finance rate limit reached — too many requests. "
+                "Please wait 1-2 minutes and try again."
+            )
+        raise ValueError(f"Failed to fetch data for '{ticker}': {err}")
 
     if df.empty:
         raise ValueError(
             f"No data found for ticker '{ticker}'. "
-            "For Bursa stocks use format like '1155.KL'. "
-            "Check the ticker is correct and try a longer period."
+            "For Bursa stocks use format like '1155.KL' or just enter '1155'. "
+            "Check the stock code is correct."
         )
 
     df = df[["Open", "High", "Low", "Close", "Volume"]].copy()
