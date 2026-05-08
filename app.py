@@ -12,7 +12,58 @@ st.set_page_config(
     page_title="Technical Analysis Signal Generator",
     page_icon="📈",
     layout="wide",
+    initial_sidebar_state="auto",   # collapsed on mobile, expanded on desktop
 )
+
+# ── Mobile-responsive CSS ─────────────────────────────────────────────────────
+st.markdown("""
+<style>
+/* ── Desktop baseline ── */
+.main .block-container {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+    max-width: 1200px;
+}
+
+/* ── Mobile: screens ≤ 768px ── */
+@media (max-width: 768px) {
+    /* Full-width container, tighter padding */
+    .main .block-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Stack all columns vertically */
+    div[data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* Smaller headings */
+    h1 { font-size: 1.4rem !important; }
+    h2 { font-size: 1.2rem !important; }
+    h3 { font-size: 1.0rem !important; }
+
+    /* Badges wrap instead of overflow */
+    span[style] { white-space: normal !important; }
+
+    /* Confidence meter font */
+    div[style*="font-family:monospace"] {
+        font-size: 0.78rem !important;
+    }
+}
+
+/* ── Tablet: 769px – 1024px ── */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .main .block-container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ── Badge helpers ─────────────────────────────────────────────────────────────
 OVERALL_COLOR = {
@@ -132,7 +183,7 @@ df = full_df[full_df.index >= display_df.index[0]].copy()
 s = get_latest_signal_summary(df)
 
 # ── Header ────────────────────────────────────────────────────────────────────
-col_name, col_price, col_overall = st.columns([3, 1, 2])
+col_name, col_price, col_overall = st.columns([3, 1, 2], gap="small")
 with col_name:
     st.subheader(info["name"])
     st.caption(f"Sector: {info['sector']}  |  {ticker}  |  {period_label} {interval_label}")
@@ -191,12 +242,13 @@ if use_adx_filter or use_ema200_filter:
     st.divider()
 
 # ── Two-layer signal panel ────────────────────────────────────────────────────
+# Uses 2 columns on desktop (side by side), stacks to 1 column on mobile via CSS
 left, right = st.columns(2, gap="large")
 
 # ── Layer 1: Trend Direction (State) ─────────────────────────────────────────
 with left:
     trend_score = s["trend_score"]
-    trend_dir = s["trend_direction"]
+    trend_dir   = s["trend_direction"]
     st.markdown(
         f"#### Layer 1 — Trend Direction &nbsp;&nbsp;"
         + badge(trend_dir, TREND_COLOR, f"{trend_dir}  ({trend_score:+d}/4)"),
@@ -204,21 +256,23 @@ with left:
     )
     st.caption("Is the market currently bullish or bearish? Updates every day.")
 
-    c1, c2, c3, c4 = st.columns(4)
     rsi_val = f"RSI={s['rsi']:.0f}" if s["rsi"] else "RSI=N/A"
-    with c1:
+    # 2×2 grid — more readable on mobile than 4 in a row
+    row1a, row1b = st.columns(2)
+    row2a, row2b = st.columns(2)
+    with row1a:
         st.markdown("**RSI**")
         st.markdown(badge(s["state_rsi"], STATE_COLOR), unsafe_allow_html=True)
         st.caption(rsi_val)
-    with c2:
+    with row1b:
         st.markdown("**MACD**")
         st.markdown(badge(s["state_macd"], STATE_COLOR), unsafe_allow_html=True)
         st.caption("vs signal line")
-    with c3:
+    with row2a:
         st.markdown("**BB Zone**")
         st.markdown(badge(s["state_bb"], STATE_COLOR), unsafe_allow_html=True)
         st.caption("price position")
-    with c4:
+    with row2b:
         st.markdown("**EMA**")
         st.markdown(badge(s["state_ema"], STATE_COLOR), unsafe_allow_html=True)
         st.caption("EMA9 vs EMA21")
@@ -233,40 +287,41 @@ with right:
     )
     st.caption("Did a crossover/trigger happen today? Fires only on the exact day.")
 
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
+    row1a, row1b = st.columns(2)
+    row2a, row2b = st.columns(2)
+    with row1a:
         st.markdown("**MACD X**")
         st.markdown(badge(s["event_macd"], EVENT_COLOR), unsafe_allow_html=True)
         st.caption("line crossover")
-    with c2:
+    with row1b:
         st.markdown("**EMA X**")
         st.markdown(badge(s["event_ema"], EVENT_COLOR), unsafe_allow_html=True)
         st.caption("9/21 crossover")
-    with c3:
+    with row2a:
         st.markdown("**RSI X**")
         st.markdown(badge(s["event_rsi"], EVENT_COLOR), unsafe_allow_html=True)
         st.caption("exits 35/65")
-    with c4:
+    with row2b:
         st.markdown("**BB Bounce**")
         st.markdown(badge(s["event_bb"], EVENT_COLOR), unsafe_allow_html=True)
         st.caption("re-enters band")
 
 # ── Logic explanation box ─────────────────────────────────────────────────────
 st.markdown("---")
-col_logic, col_vol = st.columns([3, 1])
+rules = {
+    ("BUY",     "BULLISH"): ("STRONG BUY",     "Entry trigger confirmed by bullish trend — best entry"),
+    ("BUY",     "MIXED"):   ("BUY",             "Entry trigger fired, trend is mixed — moderate confidence"),
+    ("BUY",     "BEARISH"): ("NEUTRAL",         "Entry trigger vs bearish trend — filtered out (false signal)"),
+    ("SELL",    "BEARISH"): ("STRONG SELL",     "Exit trigger confirmed by bearish trend — best exit"),
+    ("SELL",    "MIXED"):   ("SELL",            "Exit trigger fired, trend is mixed — moderate confidence"),
+    ("SELL",    "BULLISH"): ("NEUTRAL",         "Exit trigger vs bullish trend — filtered out (false signal)"),
+    ("NEUTRAL", "BULLISH"): ("WATCH (BULLISH)", "Trend is up but no trigger yet — hold or wait for entry"),
+    ("NEUTRAL", "BEARISH"): ("WATCH (BEARISH)", "Trend is down, no trigger — avoid or wait to exit"),
+    ("NEUTRAL", "MIXED"):   ("NEUTRAL",         "No trigger, no clear trend — sit out"),
+}
+current_key = (entry, trend_dir)
+col_logic, col_vol = st.columns([4, 1])
 with col_logic:
-    rules = {
-        ("BUY",     "BULLISH"): ("STRONG BUY",     "Entry trigger confirmed by bullish trend — best entry"),
-        ("BUY",     "MIXED"):   ("BUY",             "Entry trigger fired, trend is mixed — moderate confidence"),
-        ("BUY",     "BEARISH"): ("NEUTRAL",         "Entry trigger vs bearish trend — filtered out (false signal)"),
-        ("SELL",    "BEARISH"): ("STRONG SELL",     "Exit trigger confirmed by bearish trend — best exit"),
-        ("SELL",    "MIXED"):   ("SELL",            "Exit trigger fired, trend is mixed — moderate confidence"),
-        ("SELL",    "BULLISH"): ("NEUTRAL",         "Exit trigger vs bullish trend — filtered out (false signal)"),
-        ("NEUTRAL", "BULLISH"): ("WATCH (BULLISH)", "Trend is up but no trigger yet — hold or wait for entry"),
-        ("NEUTRAL", "BEARISH"): ("WATCH (BEARISH)", "Trend is down, no trigger — avoid or wait to exit"),
-        ("NEUTRAL", "MIXED"):   ("NEUTRAL",         "No trigger, no clear trend — sit out"),
-    }
-    current_key = (entry, trend_dir)
     if current_key in rules:
         result, reason = rules[current_key]
         st.info(f"**Why {result}?** — {reason}")
