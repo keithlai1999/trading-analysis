@@ -275,6 +275,147 @@ with col_vol:
 
 st.divider()
 
+# ── Confidence Meter ──────────────────────────────────────────────────────────
+st.subheader("Signal Confidence")
+
+def progress_bar(pct: int, color: str) -> str:
+    filled = round(pct / 10)
+    empty  = 10 - filled
+    bar    = f'<span style="color:{color}">{"█" * filled}</span>{"░" * empty}'
+    return bar
+
+trend_score    = s["trend_score"]
+buy_events     = s["buy_event_count"]
+sell_events    = s["sell_event_count"]
+confidence     = s["confidence"]
+signal_overall = s["signal_overall"]
+
+# Determine display direction (positive = bullish, negative = bearish)
+is_bearish = signal_overall in ("SELL", "STRONG SELL", "WATCH (BEARISH)")
+trend_abs  = abs(trend_score)
+event_abs  = sell_events if is_bearish else buy_events
+t_pct      = round(trend_abs / 4 * 100)
+e_pct      = round(event_abs / 4 * 100)
+
+CONF_COLOR = "#00c853" if not is_bearish else "#d50000"
+
+if confidence >= 75:
+    conf_label = "Very Strong"
+elif confidence >= 50:
+    conf_label = "Strong"
+elif confidence >= 25:
+    conf_label = "Moderate"
+elif confidence > 0:
+    conf_label = "Weak"
+else:
+    conf_label = "No Signal"
+
+trend_direction = s["trend_direction"]
+entry_signal    = s["entry_signal"]
+event_count_str = f"{event_abs}/4"
+trend_score_str = f"{'+' if trend_score >= 0 else ''}{trend_score}/4"
+
+cm1, cm2 = st.columns([2, 1])
+with cm1:
+    st.markdown(
+        f"""
+<div style="font-family:monospace;font-size:0.95rem;line-height:2">
+<b>Trend Score &nbsp;&nbsp;</b> {progress_bar(t_pct, CONF_COLOR)} &nbsp;
+<b>{trend_score_str}</b> &nbsp; {badge(trend_direction, TREND_COLOR)}
+<br>
+<b>Entry Events &nbsp;</b> {progress_bar(e_pct, CONF_COLOR)} &nbsp;
+<b>{event_count_str}</b> &nbsp; {badge(entry_signal, EVENT_COLOR)}
+<br>
+<hr style="border-color:#333;margin:4px 0">
+<b>Confidence &nbsp;&nbsp;&nbsp;</b> {progress_bar(confidence, CONF_COLOR)} &nbsp;
+<b>{confidence}%</b> &nbsp; {badge(signal_overall, OVERALL_COLOR)}
+&nbsp; <span style="color:#90a4ae">({conf_label})</span>
+</div>
+""",
+        unsafe_allow_html=True,
+    )
+with cm2:
+    st.markdown("**How to read:**")
+    st.caption("Trend Score — how many indicators agree on direction (max 4)")
+    st.caption("Entry Events — how many crossover triggers fired today (max 4)")
+    st.caption("Confidence — weighted score: 60% trend + 40% entry events")
+    st.caption("≥75% Very Strong · ≥50% Strong · ≥25% Moderate · <25% Weak")
+
+st.divider()
+
+# ── Hidden Formulas ───────────────────────────────────────────────────────────
+with st.expander("📐 How signals are calculated (formulas)"):
+    st.markdown("""
+### Layer 1 — Trend Direction (State)
+Runs every day. Checks current market condition.
+
+| Indicator | BULLISH (+1) | BEARISH (-1) | NEUTRAL (0) |
+|---|---|---|---|
+| **RSI** | RSI < 35 | RSI > 65 | 35 ≤ RSI ≤ 65 |
+| **MACD** | MACD > Signal line | MACD < Signal line | Equal |
+| **Bollinger Bands** | Price in lower 25% of band | Price in upper 25% of band | Middle 50% |
+| **EMA** | EMA9 > EMA21 | EMA9 < EMA21 | Equal |
+
+**Trend Score** = RSI + MACD + BB + EMA &nbsp; (range: −4 to +4)
+- Score ≥ +2 → **BULLISH**
+- Score ≤ −2 → **BEARISH**
+- −1 to +1 → **MIXED**
+
+---
+
+### Layer 2 — Entry Timing (Events)
+Fires only on the exact day a trigger happens.
+
+| Event | BUY trigger | SELL trigger |
+|---|---|---|
+| **MACD Crossover** | MACD crosses above signal line | MACD crosses below signal line |
+| **EMA Crossover** | EMA9 crosses above EMA21 | EMA9 crosses below EMA21 |
+| **RSI Threshold** | RSI climbs back above 35 (exits oversold) | RSI drops back below 65 (exits overbought) |
+| **BB Bounce** | Price re-enters above lower band | Price re-enters below upper band |
+
+**Entry Signal** = BUY if BUY events > SELL events, else SELL or NEUTRAL
+
+---
+
+### Confidence Score
+```
+Trend %     = abs(Trend Score) / 4 × 100
+Entry %     = max(buy events, sell events) / 4 × 100
+Confidence  = (Trend % × 60%) + (Entry % × 40%)
+```
+
+---
+
+### Combined Signal Logic
+```
+Entry=BUY  + Trend=BULLISH → STRONG BUY   (best entry)
+Entry=BUY  + Trend=MIXED   → BUY          (moderate)
+Entry=BUY  + Trend=BEARISH → NEUTRAL      (filtered — against trend)
+Entry=SELL + Trend=BEARISH → STRONG SELL  (best exit)
+Entry=SELL + Trend=MIXED   → SELL         (moderate)
+Entry=SELL + Trend=BULLISH → NEUTRAL      (filtered — against trend)
+No entry   + Trend=BULLISH → WATCH (BULLISH)
+No entry   + Trend=BEARISH → WATCH (BEARISH)
+No entry   + Trend=MIXED   → NEUTRAL
+```
+
+---
+
+### Optional Filters
+- **ADX Filter (Gate 1):** ADX < 25 → WAIT (CHOPPY) — market not trending, all signals blocked
+- **EMA 200 Filter (Gate 2):** Price below EMA 200 → only SELL signals pass; above → only BUY signals pass
+
+---
+
+### Indicator Formulas
+- **RSI** = 100 − 100/(1 + avg_gain/avg_loss) over 14 periods
+- **MACD** = EMA(12) − EMA(26); Signal = EMA(9) of MACD
+- **Bollinger Bands** = SMA(20) ± 2 × standard deviation
+- **EMA** = Price × k + prev_EMA × (1−k), where k = 2/(period+1)
+- **ADX** = smoothed average of directional movement over 14 periods
+- **ATR** = average of (High−Low, High−prev_Close, Low−prev_Close) over 14 periods
+""")
+
 # ── Chart ─────────────────────────────────────────────────────────────────────
 subplot_rows = 1
 row_heights = [0.5]

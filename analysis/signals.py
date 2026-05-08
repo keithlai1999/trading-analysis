@@ -218,6 +218,8 @@ def generate_signals(df: pd.DataFrame,
     trend_scores, trend_directions = [], []
     event_macd, event_ema, event_rsi, event_bb = [], [], [], []
     entry_signals = []
+    buy_event_counts, sell_event_counts = [], []
+    confidence_scores = []
     volume_signals = []
     adx_values, market_conditions = [], []
     ema200_positions = []
@@ -262,9 +264,22 @@ def generate_signals(df: pd.DataFrame,
         event_bb.append(e_bb)
 
         events = [e_macd, e_ema, e_rsi, e_bb]
-        entry = "BUY" if events.count("BUY") > events.count("SELL") else \
-                "SELL" if events.count("SELL") > events.count("BUY") else "NEUTRAL"
+        buy_count  = events.count("BUY")
+        sell_count = events.count("SELL")
+        entry = "BUY" if buy_count > sell_count else \
+                "SELL" if sell_count > buy_count else "NEUTRAL"
         entry_signals.append(entry)
+        buy_event_counts.append(buy_count)
+        sell_event_counts.append(sell_count)
+
+        # ── Confidence score (0–100%) ─────────────────────────────────────────
+        # Measures how strong the current signal is regardless of direction.
+        # Trend contributes 60%, Entry events contribute 40%.
+        abs_trend   = abs(trend_score) / 4        # 0.0 – 1.0
+        event_count = max(buy_count, sell_count)
+        abs_entry   = event_count / 4             # 0.0 – 1.0
+        confidence  = round((0.6 * abs_trend + 0.4 * abs_entry) * 100)
+        confidence_scores.append(confidence)
 
         volume_signals.append(_volume_signal(row))
         overall_signals.append(_combine(trend, entry, market, ema200,
@@ -286,6 +301,9 @@ def generate_signals(df: pd.DataFrame,
     df["Event_RSI"]        = event_rsi
     df["Event_BB"]         = event_bb
     df["Entry_Signal"]     = entry_signals
+    df["Buy_Event_Count"]  = buy_event_counts
+    df["Sell_Event_Count"] = sell_event_counts
+    df["Confidence"]       = confidence_scores
 
     df["Signal_Volume"]    = volume_signals
     df["Signal_Overall"]   = overall_signals
@@ -317,6 +335,10 @@ def get_latest_signal_summary(df: pd.DataFrame) -> dict:
         "event_rsi":        last["Event_RSI"],
         "event_bb":         last["Event_BB"],
         "entry_signal":     last["Entry_Signal"],
+        "buy_event_count":  int(last["Buy_Event_Count"]),
+        "sell_event_count": int(last["Sell_Event_Count"]),
+        # Confidence
+        "confidence":       int(last["Confidence"]),
         # Volume
         "signal_volume":    last["Signal_Volume"],
         # Combined
