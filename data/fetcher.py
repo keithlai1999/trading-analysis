@@ -81,13 +81,14 @@ STOCK_DOMAINS = {
 
 def get_stock_logo_url(ticker: str) -> str | None:
     """
-    Return a logo image URL for the given ticker using Clearbit's free logo API.
+    Return a logo image URL for the given ticker using logo.dev.
     Returns None if no domain mapping exists.
     """
     domain = STOCK_DOMAINS.get(ticker.upper())
     if not domain:
         return None
-    return f"https://logo.clearbit.com/{domain}"
+    # logo.dev free tier — no API key needed for basic usage
+    return f"https://img.logo.dev/{domain}?token=pk_public&size=80&format=png"
 
 PERIOD_OPTIONS = {
     "1 Month": "1mo",

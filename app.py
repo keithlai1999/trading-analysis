@@ -120,13 +120,15 @@ else:
     ticker = normalize_ticker(raw)
     st.sidebar.caption(f"Resolved: {ticker}")
 
-# Show company logo in sidebar (Clearbit API — graceful fallback if unavailable)
+# Show company logo in sidebar — onerror hides the element if the image fails
 _logo_url = get_stock_logo_url(ticker)
 if _logo_url:
-    try:
-        st.sidebar.image(_logo_url, width=72)
-    except Exception:
-        pass
+    st.sidebar.markdown(
+        f'<img src="{_logo_url}" width="72" '
+        f'onerror="this.style.display=\'none\'" '
+        f'style="border-radius:6px;margin-bottom:6px;background:#fff;padding:4px">',
+        unsafe_allow_html=True,
+    )
 
 period_label = st.sidebar.selectbox("Period", list(PERIOD_OPTIONS.keys()), index=2)
 period = PERIOD_OPTIONS[period_label]
@@ -194,10 +196,12 @@ s = get_latest_signal_summary(df)
 col_name, col_price, col_overall = st.columns([3, 1, 2], gap="small")
 with col_name:
     if _logo_url:
-        try:
-            st.image(_logo_url, width=48)
-        except Exception:
-            pass
+        st.markdown(
+            f'<img src="{_logo_url}" width="48" '
+            f'onerror="this.style.display=\'none\'" '
+            f'style="border-radius:6px;background:#fff;padding:3px;margin-bottom:4px">',
+            unsafe_allow_html=True,
+        )
     st.subheader(info["name"])
     st.caption(f"Sector: {info['sector']}  |  {ticker}  |  {period_label} {interval_label}")
 with col_price:
