@@ -3,20 +3,46 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 
-# Common Malaysian blue-chip stocks (Bursa Malaysia)
+# Popular Bursa Malaysia stocks organised by sector
+# Format: "Sector | Name (Code)" so they group visually in the dropdown
 POPULAR_STOCKS = {
-    "Maybank (1155)": "1155.KL",
-    "Public Bank (1295)": "1295.KL",
-    "CIMB (1023)": "1023.KL",
-    "Tenaga (5347)": "5347.KL",
-    "Petronas Gas (6033)": "6033.KL",
-    "IHH Healthcare (5225)": "5225.KL",
-    "Axiata (6888)": "6888.KL",
-    "Maxis (6012)": "6012.KL",
-    "Digi (6947)": "6947.KL",
-    "Top Glove (7113)": "7113.KL",
-    "Press Metal (8869)": "8869.KL",
-    "Hong Leong Bank (5819)": "5819.KL",
+    # ── Banking & Finance ─────────────────────────────────────────────────────
+    "Banking  |  Maybank (1155)":           "1155.KL",
+    "Banking  |  Public Bank (1295)":       "1295.KL",
+    "Banking  |  CIMB Group (1023)":        "1023.KL",
+    "Banking  |  RHB Bank (1066)":          "1066.KL",
+    "Banking  |  Hong Leong Bank (5819)":   "5819.KL",
+    "Banking  |  AMMB Holdings (1015)":     "1015.KL",
+    # ── Telecommunications ────────────────────────────────────────────────────
+    "Telco    |  Maxis (6012)":             "6012.KL",
+    "Telco    |  CelcomDigi (6947)":        "6947.KL",
+    "Telco    |  Telekom Malaysia (4863)":  "4863.KL",
+    "Telco    |  Axiata (6888)":            "6888.KL",
+    # ── Energy & Utilities ────────────────────────────────────────────────────
+    "Energy   |  Tenaga Nasional (5347)":   "5347.KL",
+    "Energy   |  Petronas Gas (6033)":      "6033.KL",
+    "Energy   |  Petronas Chemicals (5183)":"5183.KL",
+    "Energy   |  YTL Power (6742)":         "6742.KL",
+    "Energy   |  Dialog Group (7277)":      "7277.KL",
+    # ── Plantation ────────────────────────────────────────────────────────────
+    "Plantn   |  IOI Corporation (1961)":   "1961.KL",
+    "Plantn   |  KL Kepong (2445)":         "2445.KL",
+    "Plantn   |  Sime Darby (4197)":        "4197.KL",
+    # ── Consumer & Retail ─────────────────────────────────────────────────────
+    "Consumer |  Nestle Malaysia (4707)":   "4707.KL",
+    "Consumer |  99 Speed Mart (5326)":     "5326.KL",
+    "Consumer |  Mr DIY (5296)":            "5296.KL",
+    "Consumer |  PPB Group (4065)":         "4065.KL",
+    # ── Healthcare ───────────────────────────────────────────────────────────
+    "Health   |  IHH Healthcare (5225)":    "5225.KL",
+    "Health   |  Hartalega (5168)":         "5168.KL",
+    "Health   |  Top Glove (7113)":         "7113.KL",
+    # ── Technology & Industrial ───────────────────────────────────────────────
+    "Tech     |  Inari Amertron (0166)":    "0166.KL",
+    "Tech     |  Press Metal (8869)":       "8869.KL",
+    # ── Gaming & Leisure ──────────────────────────────────────────────────────
+    "Gaming   |  Genting (3182)":           "3182.KL",
+    "Gaming   |  Genting Malaysia (4715)":  "4715.KL",
 }
 
 PERIOD_OPTIONS = {
