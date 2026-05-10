@@ -29,7 +29,7 @@ def add_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["BB_Lower"] = bb.bollinger_lband()
     df["BB_Width"] = bb.bollinger_wband()
 
-    # --- Exponential Moving Averages ---
+    # --- Exponential Moving Averages (4 / 7 / 10 / 20 / 200) ---
     df["EMA_4"]  = ta.trend.EMAIndicator(close=close, window=4).ema_indicator()
     df["EMA_7"]  = ta.trend.EMAIndicator(close=close, window=7).ema_indicator()
     df["EMA_10"] = ta.trend.EMAIndicator(close=close, window=10).ema_indicator()
