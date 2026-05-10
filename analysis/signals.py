@@ -44,9 +44,9 @@ def _rsi_state(row: pd.Series) -> str:
     rsi = row.get("RSI")
     if pd.isna(rsi):
         return "NEUTRAL"
-    if rsi < 35:
+    if rsi < 30:
         return "BULLISH"
-    if rsi > 65:
+    if rsi > 70:
         return "BEARISH"
     return "NEUTRAL"
 
@@ -81,13 +81,13 @@ def _bb_state(row: pd.Series) -> str:
 
 
 def _ema_state(row: pd.Series) -> str:
-    ema9 = row.get("EMA_9")
-    ema21 = row.get("EMA_21")
-    if any(pd.isna(v) for v in [ema9, ema21]):
+    ema7 = row.get("EMA_7")
+    ema20 = row.get("EMA_20")
+    if any(pd.isna(v) for v in [ema7, ema20]):
         return "NEUTRAL"
-    if ema9 > ema21:
+    if ema7 > ema20:
         return "BULLISH"
-    if ema9 < ema21:
+    if ema7 < ema20:
         return "BEARISH"
     return "NEUTRAL"
 
@@ -110,15 +110,15 @@ def _macd_event(row: pd.Series, prev_row: pd.Series) -> str:
 
 
 def _ema_event(row: pd.Series, prev_row: pd.Series) -> str:
-    ema9 = row.get("EMA_9")
-    ema21 = row.get("EMA_21")
-    prev_ema9 = prev_row.get("EMA_9")
-    prev_ema21 = prev_row.get("EMA_21")
-    if any(pd.isna(v) for v in [ema9, ema21, prev_ema9, prev_ema21]):
+    ema7 = row.get("EMA_7")
+    ema20 = row.get("EMA_20")
+    prev_ema7 = prev_row.get("EMA_7")
+    prev_ema20 = prev_row.get("EMA_20")
+    if any(pd.isna(v) for v in [ema7, ema20, prev_ema7, prev_ema20]):
         return "NEUTRAL"
-    if prev_ema9 < prev_ema21 and ema9 > ema21:
+    if prev_ema7 < prev_ema20 and ema7 > ema20:
         return "BUY"
-    if prev_ema9 > prev_ema21 and ema9 < ema21:
+    if prev_ema7 > prev_ema20 and ema7 < ema20:
         return "SELL"
     return "NEUTRAL"
 
@@ -128,9 +128,9 @@ def _rsi_event(row: pd.Series, prev_row: pd.Series) -> str:
     prev_rsi = prev_row.get("RSI")
     if any(pd.isna(v) for v in [rsi, prev_rsi]):
         return "NEUTRAL"
-    if prev_rsi < 35 and rsi >= 35:
+    if prev_rsi < 30 and rsi >= 30:
         return "BUY"
-    if prev_rsi > 65 and rsi <= 65:
+    if prev_rsi > 70 and rsi <= 70:
         return "SELL"
     return "NEUTRAL"
 

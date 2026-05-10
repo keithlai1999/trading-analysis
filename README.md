@@ -25,10 +25,10 @@ Runs every day. Checks whether the current market condition is bullish or bearis
 
 | Indicator | BULLISH (+1) | BEARISH (−1) | NEUTRAL (0) |
 |---|---|---|---|
-| **RSI** | RSI < 35 | RSI > 65 | 35 ≤ RSI ≤ 65 |
+| **RSI** | RSI < 30 | RSI > 70 | 30 ≤ RSI ≤ 70 |
 | **MACD** | MACD > Signal line | MACD < Signal line | Equal |
 | **Bollinger Bands** | Price in lower 25% of band | Price in upper 25% of band | Middle 50% |
-| **EMA** | EMA9 > EMA21 | EMA9 < EMA21 | Equal |
+| **EMA** | EMA7 > EMA20 | EMA7 < EMA20 | Equal |
 
 **Trend Score** = sum of all four (range: −4 to +4)
 - ≥ +2 → **BULLISH**
@@ -41,8 +41,8 @@ Fires only on the exact day a crossover or trigger happens.
 | Event | BUY trigger | SELL trigger |
 |---|---|---|
 | **MACD Crossover** | MACD crosses above signal line | MACD crosses below signal line |
-| **EMA Crossover** | EMA9 crosses above EMA21 | EMA9 crosses below EMA21 |
-| **RSI Threshold** | RSI climbs back above 35 (exits oversold) | RSI drops back below 65 (exits overbought) |
+| **EMA Crossover** | EMA7 crosses above EMA20 | EMA7 crosses below EMA20 |
+| **RSI Threshold** | RSI climbs back above 30 (exits oversold) | RSI drops back below 70 (exits overbought) |
 | **BB Bounce** | Price re-enters above lower band | Price re-enters below upper band |
 
 ### Combined Signal Logic

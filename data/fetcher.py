@@ -91,25 +91,33 @@ def get_stock_logo_url(ticker: str) -> str | None:
     return f"https://img.logo.dev/{domain}?token=pk_public&size=80&format=png"
 
 PERIOD_OPTIONS = {
-    "1 Month": "1mo",
+    "1 Day":    "1d",
+    "5 Days":   "5d",
+    "1 Month":  "1mo",
     "3 Months": "3mo",
     "6 Months": "6mo",
-    "1 Year": "1y",
-    "2 Years": "2y",
+    "1 Year":   "1y",
+    "2 Years":  "2y",
 }
 
 INTERVAL_OPTIONS = {
-    "Daily": "1d",
-    "Weekly": "1wk",
+    "Daily":      "1d",
+    "Weekly":     "1wk",
+    "1 Hour":     "1h",
+    "15 Minutes": "15m",
+    "5 Minutes":  "5m",
 }
 
-# EMA 200 needs at least 200 bars. We always fetch this many extra bars
-# for indicator warmup, then trim back to the user's selected display period.
+# For daily/weekly: fetch 300 extra days so EMA 200 has enough warmup bars.
+# For intraday: yfinance caps history (5m/15m = 60 days, 1h = 730 days),
+# so use a smaller warmup and cap total fetch window accordingly.
 _WARMUP_DAYS = 300
+_INTRADAY_WARMUP = {"5m": 14, "15m": 14, "1h": 60}
+_INTRADAY_MAX_DAYS = {"5m": 55, "15m": 55, "1h": 700}
 
 
 def _period_to_days(period: str) -> int:
-    mapping = {"1mo": 30, "3mo": 90, "6mo": 180, "1y": 365, "2y": 730}
+    mapping = {"1d": 1, "5d": 5, "1mo": 30, "3mo": 90, "6mo": 180, "1y": 365, "2y": 730}
     return mapping.get(period, 180)
 
 
@@ -139,7 +147,13 @@ def fetch_stock_data(ticker: str, period: str = "6mo", interval: str = "1d") -> 
     Raises ValueError if no data is returned or rate limited.
     """
     display_days = _period_to_days(period)
-    total_days   = display_days + _WARMUP_DAYS
+    if interval in _INTRADAY_WARMUP:
+        warmup     = _INTRADAY_WARMUP[interval]
+        max_days   = _INTRADAY_MAX_DAYS[interval]
+        total_days = min(display_days + warmup, max_days)
+        display_days = min(display_days, max_days - warmup)
+    else:
+        total_days = display_days + _WARMUP_DAYS
 
     end   = datetime.today()
     start = end - timedelta(days=total_days)

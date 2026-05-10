@@ -120,15 +120,22 @@ else:
     ticker = normalize_ticker(raw)
     st.sidebar.caption(f"Resolved: {ticker}")
 
-period_label = st.sidebar.selectbox("Period", list(PERIOD_OPTIONS.keys()), index=2)
+period_label = st.sidebar.selectbox("Period", list(PERIOD_OPTIONS.keys()), index=4)
 period = PERIOD_OPTIONS[period_label]
 
 interval_label = st.sidebar.selectbox("Interval", list(INTERVAL_OPTIONS.keys()))
 interval = INTERVAL_OPTIONS[interval_label]
 
+if interval in ("5m", "15m", "1h"):
+    st.sidebar.warning(
+        "⚠️ Yahoo Finance intraday data has a **~15 min delay** vs live market price. "
+        + ("Max history: 60 days." if interval in ("5m", "15m") else "Max history: 2 years."),
+        icon=None,
+    )
+
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Indicators shown**")
-show_ema    = st.sidebar.checkbox("EMA (9 / 21 / 50)", value=True)
+show_ema    = st.sidebar.checkbox("EMA (4 / 7 / 10 / 20)", value=True)
 show_bb     = st.sidebar.checkbox("Bollinger Bands", value=True)
 show_rsi    = st.sidebar.checkbox("RSI", value=True)
 show_macd   = st.sidebar.checkbox("MACD", value=True)
@@ -275,7 +282,7 @@ with left:
     with row2b:
         st.markdown("**EMA**")
         st.markdown(badge(s["state_ema"], STATE_COLOR), unsafe_allow_html=True)
-        st.caption("EMA9 vs EMA21")
+        st.caption("EMA7 vs EMA20")
 
 # ── Layer 2: Entry Timing (Events) ───────────────────────────────────────────
 with right:
@@ -300,7 +307,7 @@ with right:
     with row2a:
         st.markdown("**RSI X**")
         st.markdown(badge(s["event_rsi"], EVENT_COLOR), unsafe_allow_html=True)
-        st.caption("exits 35/65")
+        st.caption("exits 30/70")
     with row2b:
         st.markdown("**BB Bounce**")
         st.markdown(badge(s["event_bb"], EVENT_COLOR), unsafe_allow_html=True)
@@ -408,10 +415,10 @@ Runs every day. Checks current market condition.
 
 | Indicator | BULLISH (+1) | BEARISH (-1) | NEUTRAL (0) |
 |---|---|---|---|
-| **RSI** | RSI < 35 | RSI > 65 | 35 ≤ RSI ≤ 65 |
+| **RSI** | RSI < 30 | RSI > 70 | 30 ≤ RSI ≤ 70 |
 | **MACD** | MACD > Signal line | MACD < Signal line | Equal |
 | **Bollinger Bands** | Price in lower 25% of band | Price in upper 25% of band | Middle 50% |
-| **EMA** | EMA9 > EMA21 | EMA9 < EMA21 | Equal |
+| **EMA** | EMA7 > EMA20 | EMA7 < EMA20 | Equal |
 
 **Trend Score** = RSI + MACD + BB + EMA &nbsp; (range: −4 to +4)
 - Score ≥ +2 → **BULLISH**
@@ -426,8 +433,8 @@ Fires only on the exact day a trigger happens.
 | Event | BUY trigger | SELL trigger |
 |---|---|---|
 | **MACD Crossover** | MACD crosses above signal line | MACD crosses below signal line |
-| **EMA Crossover** | EMA9 crosses above EMA21 | EMA9 crosses below EMA21 |
-| **RSI Threshold** | RSI climbs back above 35 (exits oversold) | RSI drops back below 65 (exits overbought) |
+| **EMA Crossover** | EMA7 crosses above EMA20 | EMA7 crosses below EMA20 |
+| **RSI Threshold** | RSI climbs back above 30 (exits oversold) | RSI drops back below 70 (exits overbought) |
 | **BB Bounce** | Price re-enters above lower band | Price re-enters below upper band |
 
 **Entry Signal** = BUY if BUY events > SELL events, else SELL or NEUTRAL
@@ -513,7 +520,7 @@ fig.add_trace(
 
 # EMA lines
 if show_ema:
-    for ema, color, width in [("EMA_9", "#f59e0b", 1.5), ("EMA_21", "#3b82f6", 1.5), ("EMA_50", "#a855f7", 1)]:
+    for ema, color, width in [("EMA_4", "#f59e0b", 1), ("EMA_7", "#3b82f6", 1), ("EMA_10", "#a855f7", 1), ("EMA_20", "#10b981", 1.5)]:
         fig.add_trace(
             go.Scatter(x=df.index, y=df[ema], name=ema.replace("_", " "),
                        line=dict(color=color, width=width), opacity=0.85),
@@ -584,9 +591,9 @@ if show_rsi:
         go.Scatter(x=df.index, y=df["RSI"], name="RSI", line=dict(color="#f59e0b", width=1.5)),
         row=current_row, col=1,
     )
-    fig.add_hline(y=65, line_dash="dot", line_color="red",   opacity=0.5, row=current_row, col=1)
-    fig.add_hline(y=35, line_dash="dot", line_color="green", opacity=0.5, row=current_row, col=1)
-    fig.add_hrect(y0=35, y1=65, fillcolor="rgba(255,255,255,0.03)", row=current_row, col=1)
+    fig.add_hline(y=70, line_dash="dot", line_color="red",   opacity=0.5, row=current_row, col=1)
+    fig.add_hline(y=30, line_dash="dot", line_color="green", opacity=0.5, row=current_row, col=1)
+    fig.add_hrect(y0=30, y1=70, fillcolor="rgba(255,255,255,0.03)", row=current_row, col=1)
     fig.update_yaxes(range=[0, 100], row=current_row, col=1)
     current_row += 1
 

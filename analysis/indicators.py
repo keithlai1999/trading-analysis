@@ -30,9 +30,10 @@ def add_all_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["BB_Width"] = bb.bollinger_wband()
 
     # --- Exponential Moving Averages ---
-    df["EMA_9"] = ta.trend.EMAIndicator(close=close, window=9).ema_indicator()
-    df["EMA_21"] = ta.trend.EMAIndicator(close=close, window=21).ema_indicator()
-    df["EMA_50"] = ta.trend.EMAIndicator(close=close, window=50).ema_indicator()
+    df["EMA_4"]  = ta.trend.EMAIndicator(close=close, window=4).ema_indicator()
+    df["EMA_7"]  = ta.trend.EMAIndicator(close=close, window=7).ema_indicator()
+    df["EMA_10"] = ta.trend.EMAIndicator(close=close, window=10).ema_indicator()
+    df["EMA_20"] = ta.trend.EMAIndicator(close=close, window=20).ema_indicator()
     df["EMA_200"] = ta.trend.EMAIndicator(close=close, window=200).ema_indicator()
 
     # --- Simple Moving Average ---
