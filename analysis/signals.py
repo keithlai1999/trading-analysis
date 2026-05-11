@@ -211,7 +211,8 @@ def _combine(trend: str, entry: str, market: str, ema200: str,
 
 def generate_signals(df: pd.DataFrame,
                      use_adx_filter: bool = False,
-                     use_ema200_filter: bool = False) -> pd.DataFrame:
+                     use_ema200_filter: bool = False,
+                     use_sensitive_mode: bool = False) -> pd.DataFrame:
     df = df.copy()
 
     state_rsi, state_macd, state_bb, state_ema = [], [], [], []
@@ -249,7 +250,8 @@ def generate_signals(df: pd.DataFrame,
 
         trend_score = _STATE_SCORE[s_rsi] + _STATE_SCORE[s_macd] + _STATE_SCORE[s_bb] + _STATE_SCORE[s_ema]
         trend_scores.append(trend_score)
-        trend = "BULLISH" if trend_score >= 2 else "BEARISH" if trend_score <= -2 else "MIXED"
+        threshold = 1 if use_sensitive_mode else 2
+        trend = "BULLISH" if trend_score >= threshold else "BEARISH" if trend_score <= -threshold else "MIXED"
         trend_directions.append(trend)
 
         # ── Layer 2: Events ───────────────────────────────────────────────────

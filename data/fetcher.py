@@ -34,8 +34,11 @@ POPULAR_STOCKS = {
     "🛒 PPB Group (4065)":            "4065.KL",
     # ── Healthcare ────────────────────────────────────────────────────────────
     "🏥 IHH Healthcare (5225)":       "5225.KL",
-    "🏥 Hartalega (5168)":            "5168.KL",
-    "🏥 Top Glove (7113)":            "7113.KL",
+    # ── Glove Sector ─────────────────────────────────────────────────────────
+    "🧤 Hartalega (5168)":            "5168.KL",
+    "🧤 Top Glove (7113)":            "7113.KL",
+    "🧤 Kossan (7153)":               "7153.KL",
+    "🧤 Supermax (7106)":             "7106.KL",
     # ── Technology & Industrial ───────────────────────────────────────────────
     "💻 Inari Amertron (0166)":       "0166.KL",
     "💻 Press Metal (8869)":          "8869.KL",

@@ -149,6 +149,12 @@ use_adx_filter   = st.sidebar.checkbox("ADX filter (trending only)", value=False
 use_ema200_filter = st.sidebar.checkbox("EMA 200 filter (long-term trend)", value=False,
                                          help="Block BUY signals when price is below EMA 200. "
                                               "Safer but very restrictive for beginners.")
+use_sensitive_mode = st.sidebar.checkbox("Sensitive Mode 🔥", value=False,
+                                          help="Lower trend threshold from 2/4 → 1/4 indicators. "
+                                               "Catches early moves on volatile/news-driven stocks. "
+                                               "More signals but more false positives.")
+if use_sensitive_mode:
+    st.sidebar.caption("⚡ Sensitive: 1/4 indicators enough to show trend direction.")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Signal legend**")
@@ -185,7 +191,9 @@ info = get_stock_info(ticker)
 # Calculate indicators on full history (ensures EMA200/ADX have enough bars),
 # then trim back to the display period for charting and the signal table.
 full_df = add_all_indicators(full_df)
-full_df = generate_signals(full_df, use_adx_filter=use_adx_filter, use_ema200_filter=use_ema200_filter)
+full_df = generate_signals(full_df, use_adx_filter=use_adx_filter,
+                           use_ema200_filter=use_ema200_filter,
+                           use_sensitive_mode=use_sensitive_mode)
 df = full_df[full_df.index >= display_df.index[0]].copy()
 s = get_latest_signal_summary(df)
 
@@ -336,6 +344,8 @@ with col_vol:
     st.markdown("**Volume**")
     st.markdown(badge(s["signal_volume"], EVENT_COLOR), unsafe_allow_html=True)
     st.caption("1.5x avg = spike")
+    if use_sensitive_mode and s["signal_volume"] == "ALERT":
+        st.warning("📢 Volume spike! Watch for follow-through.")
 
 st.divider()
 
