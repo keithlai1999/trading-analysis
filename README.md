@@ -8,10 +8,11 @@ A web-based stock analysis tool for **Bursa Malaysia** stocks. Built with Python
 
 ## What it does
 
-- Fetches real-time OHLCV data from Yahoo Finance
-- Calculates RSI, MACD, Bollinger Bands, EMA, ADX, ATR, and Volume indicators
+- Fetches OHLCV data from Yahoo Finance (daily, weekly, 1h, 15m, 5m intervals)
+- Calculates RSI, MACD, Bollinger Bands, EMA (4/7/10/20/200), ADX, ATR, and Volume indicators
 - Generates a structured **BUY / SELL / WATCH / NEUTRAL** signal using a two-layer system
 - Shows a **confidence score (0–100%)** so you know how strong the signal is
+- **Sensitive Mode** for volatile/news-driven stocks — catches early moves before they fully confirm
 - Displays an interactive candlestick chart with all indicators
 - Shows a signal history table for the last 20 trading days
 - Works on both desktop and mobile
@@ -31,9 +32,9 @@ Runs every day. Checks whether the current market condition is bullish or bearis
 | **EMA** | EMA7 > EMA20 | EMA7 < EMA20 | Equal |
 
 **Trend Score** = sum of all four (range: −4 to +4)
-- ≥ +2 → **BULLISH**
-- ≤ −2 → **BEARISH**
-- −1 to +1 → **MIXED**
+- ≥ +2 → **BULLISH** *(Sensitive Mode: ≥ +1)*
+- ≤ −2 → **BEARISH** *(Sensitive Mode: ≤ −1)*
+- Otherwise → **MIXED**
 
 ### Layer 2 — Entry Timing (Events)
 Fires only on the exact day a crossover or trigger happens.
@@ -66,18 +67,19 @@ Entry %    = max(buy events, sell events) / 4 × 100
 Confidence = (Trend % × 60%) + (Entry % × 40%)
 ```
 
-### Optional Filters
-Both are **off by default** (can be turned on in the sidebar):
+### Optional Filters & Modes
+All are **off by default** (can be turned on in the sidebar):
 
 - **ADX Filter** — blocks all signals when ADX < 25 (choppy/sideways market). Good for avoiding false signals, but may miss valid moves.
 - **EMA 200 Filter** — only allows BUY signals when price is above EMA 200 (long-term uptrend), and only SELL signals when below. Safer but very restrictive.
+- **Sensitive Mode 🔥** — lowers trend threshold from 2/4 to 1/4 indicators. Catches early moves on volatile or news-driven stocks (e.g. glove counters on health news). More signals but higher false positive rate.
 
 ---
 
 ## How to use it
 
-1. **Select a stock** — choose from 29 popular Bursa Malaysia stocks in the dropdown, or type any stock code manually (e.g. `1155` or `1155.KL`)
-2. **Set period & interval** — 1 month to 2 years; daily or weekly bars
+1. **Select a stock** — choose from 33 popular Bursa Malaysia stocks in the dropdown, or type any stock code manually (e.g. `1155` or `1155.KL`)
+2. **Set period & interval** — 1 day to 2 years; daily, weekly, 1h, 15m, or 5m bars *(intraday data has ~15 min delay)*
 3. **Read Layer 1** — is the overall trend bullish, bearish, or mixed?
 4. **Read Layer 2** — did an entry trigger fire today?
 5. **Check the confidence score** — higher % means more indicators agree
@@ -96,7 +98,7 @@ Both are **off by default** (can be turned on in the sidebar):
 
 ## Supported stocks
 
-29 Bursa Malaysia stocks across 8 sectors:
+33 Bursa Malaysia stocks across 9 sectors:
 
 | Sector | Stocks |
 |---|---|
@@ -105,7 +107,8 @@ Both are **off by default** (can be turned on in the sidebar):
 | ⚡ Energy & Utilities | Tenaga Nasional, Petronas Gas, Petronas Chemicals, YTL Power, Dialog Group |
 | 🌴 Plantation | IOI Corporation, KL Kepong, Sime Darby |
 | 🛒 Consumer & Retail | Nestle Malaysia, 99 Speed Mart, Mr DIY, PPB Group |
-| 🏥 Healthcare | IHH Healthcare, Hartalega, Top Glove |
+| 🏥 Healthcare | IHH Healthcare |
+| 🧤 Glove Sector | Hartalega, Top Glove, Kossan, Supermax |
 | 💻 Technology & Industrial | Inari Amertron, Press Metal |
 | 🎰 Gaming & Leisure | Genting, Genting Malaysia |
 

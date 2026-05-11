@@ -311,7 +311,7 @@ with right:
     with row1b:
         st.markdown("**EMA X**")
         st.markdown(badge(s["event_ema"], EVENT_COLOR), unsafe_allow_html=True)
-        st.caption("9/21 crossover")
+        st.caption("7/20 crossover")
     with row2a:
         st.markdown("**RSI X**")
         st.markdown(badge(s["event_rsi"], EVENT_COLOR), unsafe_allow_html=True)
@@ -431,9 +431,9 @@ Runs every day. Checks current market condition.
 | **EMA** | EMA7 > EMA20 | EMA7 < EMA20 | Equal |
 
 **Trend Score** = RSI + MACD + BB + EMA &nbsp; (range: −4 to +4)
-- Score ≥ +2 → **BULLISH**
-- Score ≤ −2 → **BEARISH**
-- −1 to +1 → **MIXED**
+- Score ≥ +2 → **BULLISH** &nbsp;*(Sensitive Mode: ≥ +1)*
+- Score ≤ −2 → **BEARISH** &nbsp;*(Sensitive Mode: ≤ −1)*
+- Otherwise → **MIXED**
 
 ---
 
@@ -478,6 +478,7 @@ No entry   + Trend=MIXED   → NEUTRAL
 ### Optional Filters
 - **ADX Filter (Gate 1):** ADX < 25 → WAIT (CHOPPY) — market not trending, all signals blocked
 - **EMA 200 Filter (Gate 2):** Price below EMA 200 → only SELL signals pass; above → only BUY signals pass
+- **Sensitive Mode 🔥:** Lowers trend threshold from ±2 to ±1. Catches early moves on volatile or news-driven stocks. More signals but higher risk of false positives.
 
 ---
 
